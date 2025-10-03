@@ -1,0 +1,6 @@
+[client]
+showErrorDetails = true
+
+[theme]
+base="light"
+primaryColor="#6C63FF"
