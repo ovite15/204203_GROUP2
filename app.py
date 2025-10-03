@@ -3,10 +3,15 @@ import re
 import time
 import json
 import streamlit as st
-from dotenv import load_dotenv
+
 from litellm import completion
 
-load_dotenv()
+# Optional .env for local dev only
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 
 st.set_page_config(page_title="🥠 AI Fortune Cookie – Groq Model Comparison", page_icon="🥠", layout="wide")
 st.title("🥠 AI Fortune Cookie – Groq LLM Sampler (LiteLLM)")
