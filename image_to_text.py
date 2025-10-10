@@ -16,7 +16,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 from utils.llm_client import LLMClient, get_available_models  
-from utils.vision import ( 
+from utils.vision import (  
     detect_ingredients_from_image,
     format_ingredient_list,
 )
@@ -64,55 +64,88 @@ st.session_state.setdefault("edit_text", "")
 st.session_state.setdefault("llm_client", None)
 st.session_state.setdefault("messages", [])
 
-# ── Main UI ────────────────────────────────────────────────────────────────
-uploaded = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
-if uploaded is not None:
-    with st.spinner("กำลังวิเคราะห์ภาพเพื่อดึงวัตถุดิบ..."):
-        detection = detect_ingredients_from_image(
-            uploaded,
-            temperature=temp,
-            max_tokens=max_toks,
-            prefer_provider=None,
-        )
+# ── Tabs UI ────────────────────────────────────────────────────────────────
+tab_img, tab_text = st.tabs(["อัปโหลดรูป", "พิมพ์รายการเอง"])
 
-    st.image(uploaded, caption="Uploaded image", width='stretch')
+# ========== upload image ==========
+with tab_img:
+    uploaded = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
+    if uploaded is not None:
+        with st.spinner("กำลังวิเคราะห์ภาพเพื่อดึงวัตถุดิบ..."):
+            detection = detect_ingredients_from_image(
+                uploaded,
+                temperature=temp,
+                max_tokens=max_toks,
+                prefer_provider=None,
+            )
 
-    # Only update detected ingredients if user hasn't customized
-    detected_items = detection.get("ingredients", []) or []
-    if not st.session_state.get("has_custom"):
-        st.session_state["ingredients"] = detected_items
+        st.image(uploaded, caption="Uploaded image", width="stretch")
 
-    # Build the question in Thai
-    names_csv = format_ingredient_list(st.session_state["ingredients"]) if st.session_state["ingredients"] else ""
-    question = f"คุณมี {names_csv} ใช่ไหมครับ?" if names_csv else "ไม่พบวัตถุดิบจากภาพ คุณต้องการแก้ไขรายการเองไหม?"
+        # Only update detected ingredients if user hasn't customized
+        detected_items = detection.get("ingredients", []) or []
+        if not st.session_state.get("has_custom"):
+            st.session_state["ingredients"] = detected_items
+            st.session_state["edit_text"] = format_ingredient_list(detected_items)
 
-    st.subheader("ตรวจสอบรายการวัตถุดิบ")
-    st.info(question)
+        # Build the question in Thai
+        names_csv = format_ingredient_list(st.session_state["ingredients"]) if st.session_state["ingredients"] else ""
+        question = f"คุณมี {names_csv} ใช่ไหมครับ?" if names_csv else "ไม่พบวัตถุดิบจากภาพ คุณต้องการแก้ไขรายการเองไหม?"
 
-    col1, col2 = st.columns(2)
-    yes_clicked = col1.button("ใช่ (Yes)")
-    edit_clicked = col2.button("แก้ไข (Edit)")
+        st.subheader("ตรวจสอบรายการวัตถุดิบ")
+        st.info(question)
 
-    if yes_clicked:
-        st.session_state["confirmed"] = True
+        col1, col2 = st.columns(2)
+        yes_clicked = col1.button("ใช่", key="yes_img")
+        edit_clicked = col2.button("แก้ไข", key="edit_img")
+
+        if yes_clicked:
+            st.session_state["confirmed"] = True
+            st.session_state["editing"] = False
+            st.success("ยืนยันรายการวัตถุดิบแล้ว ขอบคุณครับ!")
+
+        if edit_clicked:
+            st.session_state["editing"] = True
+            st.session_state["edit_text"] = names_csv  # preload
+
+        if st.session_state.get("editing"):
+            st.markdown("แก้ไขรายชื่อวัตถุดิบ")
+            edited = st.text_area("", value=st.session_state.get("edit_text", names_csv), height=100, key="edit_area_img")
+            save_col, cancel_col = st.columns(2)
+            if save_col.button("บันทึก (Save)", key="save_img"):
+                parts = [p.strip() for p in (edited or "").split(",")]
+                items = [{"name": p, "confidence": 0.9} for p in parts if p]
+                st.session_state["ingredients"] = items
+                st.session_state["has_custom"] = True
+                st.session_state["editing"] = False
+                st.session_state["edit_text"] = ", ".join([i["name"] for i in items])
+                st.success("ปรับปรุงรายการแล้ว")
+            if cancel_col.button("ยกเลิก (Cancel)", key="cancel_img"):
+                st.session_state["editing"] = False
+
+# ========== type manually ==========
+with tab_text:
+    st.markdown("พิมพ์รายการวัตถุดิบเอง เช่น **ฉันมี ไข่, หมูสับ, ต้นหอม**")
+    preset = st.session_state["edit_text"] or format_ingredient_list(st.session_state["ingredients"]) or ""
+    typed = st.text_input("พิมพ์รายการ", value=preset, key="typed_input")
+    c3, c4 = st.columns(2)
+    if c3.button("ยืนยันข้อความ", key="confirm_text"):
+        parts = [p.strip() for p in (typed or "").split(",")]
+        items = [{"name": p, "confidence": 0.9} for p in parts if p]
+        st.session_state["ingredients"] = items
+        st.session_state["has_custom"] = True
         st.session_state["editing"] = False
-        st.success("ยืนยันรายการวัตถุดิบแล้ว ขอบคุณครับ!")
+        st.session_state["confirmed"] = True
+        st.session_state["edit_text"] = ", ".join(i["name"] for i in items)
+        st.success("ยืนยันรายการข้อความแล้ว")
+    if c4.button("ล้างรายการ", key="clear_text"):
+        st.session_state["ingredients"] = []
+        st.session_state["has_custom"] = False
+        st.session_state["edit_text"] = ""
+        st.session_state["confirmed"] = False
+        st.info("ล้างรายการเรียบร้อย")
 
-    if edit_clicked:
-        st.session_state["editing"] = True
-        st.session_state["edit_text"] = names_csv  
-
-    if st.session_state.get("editing"):
-        st.markdown("แก้ไขรายชื่อวัตถุดิบ (คั่นด้วยเครื่องหมายจุลภาค ,)")
-        edited = st.text_area("", value=st.session_state.get("edit_text", names_csv), height=100)
-        save_col, cancel_col = st.columns(2)
-        if save_col.button("บันทึก (Save)"):
-            parts = [p.strip() for p in (edited or "").split(",")]
-            items = [{"name": p, "confidence": 0.9} for p in parts if p]
-            st.session_state["ingredients"] = items
-            st.session_state["has_custom"] = True
-            st.session_state["editing"] = False
-            st.session_state["edit_text"] = ", ".join([i["name"] for i in items])
-            st.success("ปรับปรุงรายการแล้ว")
-        if cancel_col.button("ยกเลิก (Cancel)"):
-            st.session_state["editing"] = False
+# ── Summary ───────────────────────────────────────────────────
+if st.session_state["ingredients"]:
+    st.divider()
+    st.subheader("สรุปรายการวัตถุดิบ")
+    st.write(format_ingredient_list(st.session_state["ingredients"]))
