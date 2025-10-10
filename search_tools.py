@@ -14,7 +14,7 @@ class WebSearchTool:
 
     def search_serper(self, query: str, num_results: int = 5) -> List[Dict[str, Any]]:
         if not self.serper_api_key:
-            return [{"error": "Serper API key not ืืconfigured"}]
+            return [{"error": "Serper API key not configured"}]
 
         url = "https://google.serper.dev/search"
         headers = {"X-API-KEY": self.serper_api_key, "Content-Type": "application/json"}
@@ -46,7 +46,7 @@ class WebSearchTool:
         payload = {"api_key": self.tavily_api_key, "query": query, "max_results": num_results, "search_depth": "basic"}
 
         try:
-            resp = requests.post(url, json=payload, headers=headers)
+            resp = requests.post(url, json=payload, headers=headers, timeout=10)
             resp.raise_for_status()
             data = resp.json()
             results = []
@@ -62,23 +62,23 @@ class WebSearchTool:
         except Exception as e:
             return [{"error": f"Search failed: {str(e)}"}]
 
-    def search(self, query: str, num_results: int = 5, preferred_api: str = "serper") -> List[Dict[str, Any]]:
+    def search(self, query: str, num_results: int = 5, preferred_api: str = "serper"):
+        # Try preferred first
         if preferred_api == "serper" and self.serper_api_key:
             results = self.search_serper(query, num_results)
-            if not any("error" in r for r in results):
+            if results and "error" not in results[0]:
                 return results
-
-        if preferred_api == "tavily" and self.tavily_api_key:
+        elif preferred_api == "tavily" and self.tavily_api_key:
             results = self.search_tavily(query, num_results)
-            if not any("error" in r for r in results):
+            if results and "error" not in results[0]:
                 return results
-
-        # fallback
+        
+        # Fallback to other API
         if preferred_api == "serper" and self.tavily_api_key:
             return self.search_tavily(query, num_results)
         elif preferred_api == "tavily" and self.serper_api_key:
             return self.search_serper(query, num_results)
-
+        
         return [{"error": "No search API configured"}]
 
     def format_results(self, results: List[Dict[str, Any]]) -> str:
