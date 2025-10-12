@@ -1,6 +1,3 @@
-"""
-Utility functions for ChefBot application
-"""
 import streamlit as st
 from config import DEFAULT_MODEL, DEFAULT_TEMPERATURE, MAX_INPUT_LENGTH, MAX_CHAT_HISTORY
 
@@ -28,16 +25,6 @@ def init_session_state():
 
 
 def validate_input(text: str, max_length: int = MAX_INPUT_LENGTH) -> tuple[bool, str]:
-    """
-    Validate user input
-    
-    Args:
-        text: Input text to validate
-        max_length: Maximum allowed length
-    
-    Returns:
-        Tuple of (is_valid, error_message)
-    """
     text = text.strip()
     
     if not text:
@@ -60,7 +47,6 @@ def archive_current_chat():
 
 
 def reset_chat():
-    """Reset to new chat"""
     archive_current_chat()
     st.session_state.messages = []
     st.session_state.page = "home"

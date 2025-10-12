@@ -64,15 +64,7 @@ class CookTool:
             return {"error": str(e)}
 
     def format_recipes(self, recipes: List[Dict[str, Any]]) -> str:
-        """
-        Format recipe list into Markdown text
-        
-        Args:
-            recipes: List of recipe dictionaries
-            
-        Returns:
-            Formatted markdown string
-        """
+
         if not recipes or (isinstance(recipes, dict) and "error" in recipes):
             return "❌ ไม่พบสูตรอาหารจาก API"
 
@@ -98,15 +90,6 @@ class CookTool:
         return text
     
     def format_nutrition(self, nutrition: Dict[str, Any]) -> str:
-        """
-        Format nutrition data into readable text
-        
-        Args:
-            nutrition: Nutrition dictionary from get_nutrition
-            
-        Returns:
-            Formatted nutrition string
-        """
         if "error" in nutrition:
             return f"❌ {nutrition['error']}"
         
