@@ -164,7 +164,7 @@ def render_sidebar():
         
         # New chat button
         if st.button("🔄 แชทใหม่", use_container_width=True):
-            from utils import reset_chat
+            from helpers import reset_chat
             reset_chat()
             st.rerun()
         
@@ -206,7 +206,7 @@ def _render_chat_history():
     st.subheader("📜 ประวัติ")
     
     if st.session_state.chat_history:
-        from utils import get_chat_title, load_chat
+        from helpers import get_chat_title, load_chat
         
         for i, chat in enumerate(st.session_state.chat_history):
             title = get_chat_title(chat)

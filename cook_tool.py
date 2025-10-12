@@ -1,6 +1,3 @@
-"""
-Cooking and recipe tools using Spoonacular and USDA APIs
-"""
 import os
 import requests
 from typing import List, Dict, Any
@@ -10,7 +7,6 @@ load_dotenv()
 
 
 class CookTool:
-    """Cooking and recipe suggestion tool using Spoonacular and USDA APIs"""
 
     def __init__(self, usda_api_key=None, spoonacular_api_key=None):
         self.usda_api_key = usda_api_key or os.getenv("USDA_API_KEY")
@@ -18,16 +14,8 @@ class CookTool:
         self.usda_base = "https://api.nal.usda.gov/fdc/v1/foods/search"
         self.spoon_base = "https://api.spoonacular.com/recipes"
 
+    # Calculate nutrition using USDA API
     def get_nutrition(self, ingredient: str) -> Dict[str, Any]:
-        """
-        Get nutrition info from USDA API
-        
-        Args:
-            ingredient: Name of ingredient to look up
-            
-        Returns:
-            Dictionary with nutrition data or error
-        """
         if not self.usda_api_key:
             return {"error": "Missing USDA API key"}
 
@@ -51,16 +39,8 @@ class CookTool:
         except Exception as e:
             return {"error": str(e)}
 
+    # Search recipes using Spoonacular API
     def search_recipes(self, ingredients: List[str]) -> List[Dict[str, Any]]:
-        """
-        Search for recipes using Spoonacular API
-        
-        Args:
-            ingredients: List of ingredient names
-            
-        Returns:
-            List of recipe dictionaries or error dict
-        """
         if not self.spoonacular_api_key:
             return {"error": "Missing Spoonacular API key"}
 
