@@ -6,7 +6,7 @@ import streamlit as st
 import logging
 
 # Import configuration
-from config import GROQ_API_KEY, PAGE_TITLE, PAGE_ICON
+from config import OPENAI_API_KEY, PAGE_TITLE, PAGE_ICON  # ⭐ เปลี่ยนจาก GROQ_API_KEY
 
 # Import utilities
 from helpers import init_session_state
@@ -46,10 +46,16 @@ def main():
     # Apply custom CSS
     apply_custom_css()
     
-    # Check API key
-    if not GROQ_API_KEY:
-        st.error("❌ ไม่พบ GROQ_API_KEY กรุณาตั้งค่าใน .env file")
-        st.code("GROQ_API_KEY=your_api_key_here")
+    # Check API key - ⭐ เปลี่ยนเป็นเช็ค OPENAI_API_KEY
+    if not OPENAI_API_KEY:
+        st.error("❌ ไม่พบ OPENAI_API_KEY กรุณาตั้งค่าใน .env file")
+        st.code("OPENAI_API_KEY=sk-proj-your-key-here")
+        st.info("""
+        💡 **วิธีการ:**
+        1. ไปที่ https://platform.openai.com/api-keys
+        2. สร้าง API key ใหม่
+        3. เพิ่มใน .env file
+        """)
         st.stop()
     
     # Render sidebar
