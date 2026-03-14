@@ -1,5 +1,5 @@
 """
-Configuration and constants for ChefBot application
+Configuration and constants for ChefBot applications
 """
 import os
 from dotenv import load_dotenv
